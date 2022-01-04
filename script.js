@@ -1,7 +1,6 @@
 let ws = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@trade');
 let stockPriceElement = document.getElementById('stock-price');
 const trashContainer = document.querySelector(".trash-container");
-const moneyElem = document.querySelector(".money");
 const currencyFormatter = new Intl.NumberFormat("en-us", {
   style: "currency",
   currency: "USD",
@@ -9,22 +8,25 @@ const currencyFormatter = new Intl.NumberFormat("en-us", {
 })
 
 const trashFormatter = new Intl.NumberFormat("en-us", {
-  minimumIntegerDigits: 7,
+  minimumIntegerDigits: 6,
   maximumFractionDigits: 0,
-  useGrouping: false
+  useGrouping: false,
 })
 
-const ONE_MILLION_DOLLARS = 1000000;
+ws.onmessage = (event) => {
+  let stockObject = JSON.parse(event.data);
+  let price = parseFloat(stockObject.p).toFixed(2);
+  stockPriceElement.innerText = currencyFormatter.format(price);
+  lastPrice = price;
+}
+
+const max = 99999;
+const BITCOIN_PRICE_GOAL = Math.floor(Math.random() * max);
 
 setupTrash()
 
-async function setupTrash () {
-  ws.onmessage = (event) => {
-    let stockObject = JSON.parse(event.data);
-    let price = parseFloat(stockObject.p).toFixed(2);
-    stockPriceElement.innerText = currencyFormatter.format(price);
-  }
-
+async function setupTrash() {
+  const stringifiedAmount = trashFormatter.format(BITCOIN_PRICE_GOAL);
   const trashAmount = {
     xxl: {
       amount: parseInt(`${stringifiedAmount[0]}${stringifiedAmount[1]}`),
@@ -32,7 +34,7 @@ async function setupTrash () {
     },
     xl: {
       amount: parseInt(stringifiedAmount[2]),
-      icon: "bitcoin",
+      icon: "dollar",
     },
     lg: {
       amount: parseInt(stringifiedAmount[3]),
@@ -40,7 +42,7 @@ async function setupTrash () {
     },
     md: {
       amount: parseInt(stringifiedAmount[4]),
-      icon: "bitcoin",
+      icon: "dollar",
     },
     sm: {
       amount: parseInt(stringifiedAmount[5]),
@@ -48,11 +50,11 @@ async function setupTrash () {
     },
     xs: {
       amount: parseInt(stringifiedAmount[6]),
-      icon: "bitcoin",
+      icon: "dollar",
     },
   }
 
-  Object.values(trashAmount).forEach(({ amount, icon }) => {
+   Object.values(trashAmount).forEach(({ amount, icon }) => {
     for (let i = 0; i < amount; i++) {
       createTrash(icon)
     }
@@ -60,5 +62,19 @@ async function setupTrash () {
 }
 
 function createTrash(icon) {
-  
+  const img = document.createElement("img")
+  const top = randomNumberBetween(0, 50)
+  const size = top / 5 + 1
+  img.classList.add("trash")
+  img.src = `imgs/${icon}.svg`
+  img.style.width = `${size}vmin`
+  img.style.height = `${size}vmin`
+  img.style.top = `${top}vh`
+  img.style.left = `${randomNumberBetween(0, 100)}vw`
+  img.style.setProperty("--rotation", `${randomNumberBetween(-30, 30)}deg`)
+  trashContainer.appendChild(img)
+}
+
+function randomNumberBetween(min, max) {
+  return Math.floor(Math.random() * (max - min + 1) + min)
 }
